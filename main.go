@@ -28,6 +28,11 @@ func main() {
 
 	command := os.Args[1]
 	switch command {
+	case "vscode":
+		if err := exec.Command("open", "-a", "Visual Studio Code", config.BaseDir()).Run(); err != nil {
+			logger.Error("vscode failed", "error", err)
+			os.Exit(1)
+		}
 	case "swg":
 		if len(os.Args) >= 3 && os.Args[2] == "--path" {
 			fmt.Println(svc.Swagger.SwaggersFilePath())

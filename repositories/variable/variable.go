@@ -9,9 +9,6 @@ import (
 
 func (r *VariableRepository) varsPath() string {
 	p := r.config.VarsPath
-	if p == "" {
-		p = "vars.txt"
-	}
 	if !filepath.IsAbs(p) {
 		if wd, err := os.Getwd(); err == nil {
 			p = filepath.Join(wd, p)
@@ -80,6 +77,10 @@ func (r *VariableRepository) Add(key, value string) error {
 		}
 	}
 	entries[key] = value
+
+	if err := os.MkdirAll(filepath.Dir(varsPath), 0o755); err != nil {
+		return fmt.Errorf("create vars dir: %w", err)
+	}
 
 	var b strings.Builder
 	for k, v := range entries {

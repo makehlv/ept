@@ -34,12 +34,8 @@ go.work.sum
 # binaries
 ept
 
-# vars file
-vars.txt
-
-# swaggers file
+# example swagger spec
 swagger.yaml
-swaggers.txt
 
-# generated files
-generated/
+# app data (paths по умолчанию)
+eptfiles/

@@ -67,6 +67,10 @@ func (r *SwaggerRepository) SaveServerSpec(serverName, specPath string) error {
 	}
 	entries[serverName] = specPath
 
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return fmt.Errorf("create swaggers dir: %w", err)
+	}
+
 	var b strings.Builder
 	for k, v := range entries {
 		b.WriteString(k)
@@ -87,9 +91,6 @@ func (r *SwaggerRepository) LoadSpec(specPath string) ([]byte, error) {
 
 func (r *SwaggerRepository) swaggersPath() string {
 	p := r.config.SwaggersPath
-	if p == "" {
-		p = "swaggers.txt"
-	}
 	if !filepath.IsAbs(p) {
 		if wd, err := os.Getwd(); err == nil {
 			p = filepath.Join(wd, p)

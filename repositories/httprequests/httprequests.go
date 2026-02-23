@@ -9,7 +9,7 @@ import (
 )
 
 func (r *HttpRequestRepository) baseDir() string {
-	baseDir := "generated/httprequests"
+	baseDir := r.config.HttpRequestsPath
 	if !filepath.IsAbs(baseDir) {
 		if wd, err := os.Getwd(); err == nil {
 			baseDir = filepath.Join(wd, baseDir)
