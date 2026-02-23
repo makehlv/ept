@@ -260,12 +260,14 @@ func buildCurl(spec *OpenAPI, path, method string, op *Operation, vars map[strin
 		if ct, ok := op.RequestBody.Content["application/json"]; ok && (ct.Schema != nil || ct.Example != nil) {
 			body := buildRequestBody(ct.Schema, ct.Example, vars)
 			if len(body) > 0 {
-				raw, _ := json.Marshal(body)
+				raw, _ := json.MarshalIndent(body, "", "  ")
 				b.WriteString(fmt.Sprintf("-H %q ", "Content-Type: application/json"))
 
 				jsonBody := string(raw)
 				jsonBody = strings.ReplaceAll(jsonBody, "'", "'\\''")
-				b.WriteString(fmt.Sprintf("-d '%s' ", jsonBody))
+				b.WriteString("-d '")
+				b.WriteString(jsonBody)
+				b.WriteString("' ")
 			}
 		}
 	}
