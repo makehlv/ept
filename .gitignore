@@ -30,3 +30,13 @@ go.work.sum
 # Editor/IDE
 # .idea/
 # .vscode/
+
+# binaries
+ept
+
+# vars file
+vars.txt
+
+# swaggers file
+swagger.yaml
+swaggers.txt
