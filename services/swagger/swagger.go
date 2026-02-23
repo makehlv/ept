@@ -40,7 +40,16 @@ func (s *SwaggerService) BuildCurl(serverName, operationId string) (string, erro
 		return "", err
 	}
 
-	return buildCurl(spec, path, method, op, vars)
+	curlCmd, err := buildCurl(spec, path, method, op, vars)
+	if err != nil {
+		return "", err
+	}
+
+	if _, err := s.repositories.HttpRequest.SaveCurlIfNotExists(serverName, operationId, curlCmd); err != nil {
+		return "", fmt.Errorf("save http request: %w", err)
+	}
+
+	return curlCmd, nil
 }
 
 func (s *SwaggerService) SaveServerSpec(serverName, specPath string) error {
@@ -58,6 +67,14 @@ func (s *SwaggerService) ListServers() ([]string, error) {
 	}
 	sort.Strings(names)
 	return names, nil
+}
+
+func (s *SwaggerService) SwaggersFilePath() string {
+	return s.repositories.Swagger.SwaggersPath()
+}
+
+func (s *SwaggerService) ServerRequestsDir(serverName string) string {
+	return s.repositories.HttpRequest.ServerRequestsDir(serverName)
 }
 
 func parseSpec(data []byte) (*OpenAPI, error) {
@@ -143,11 +160,25 @@ func zeroValueForJSON(typeStr string) interface{} {
 	return ""
 }
 
-// buildRequestBody собирает тело запроса: приоритет — example из спецификации, затем vars, затем example в свойствах схемы, затем нулевые значения.
+func parseCompositeJSONVar(raw string) (interface{}, bool) {
+	s := strings.TrimSpace(raw)
+	if s == "" {
+		return nil, false
+	}
+	first := s[0]
+	if first != '{' && first != '[' {
+		return nil, false
+	}
+	var v interface{}
+	if err := json.Unmarshal([]byte(s), &v); err != nil {
+		return nil, false
+	}
+	return v, true
+}
+
 func buildRequestBody(schema map[string]interface{}, example interface{}, vars map[string]string) map[string]interface{} {
 	body := make(map[string]interface{})
 
-	// 1) Если в спецификации задан example на уровне content — используем его как базу
 	if example != nil {
 		if m, ok := example.(map[string]interface{}); ok {
 			for k, v := range m {
@@ -156,15 +187,18 @@ func buildRequestBody(schema map[string]interface{}, example interface{}, vars m
 		}
 	}
 
-	// 2) Дополняем/переопределяем из schema.properties (example в свойстве, default, или zero value)
 	if props, ok := schema["properties"].(map[string]interface{}); ok {
 		for k, propSchema := range props {
 			if v, has := vars[k]; has {
-				body[k] = v
+				if parsed, ok := parseCompositeJSONVar(v); ok {
+					body[k] = parsed
+				} else {
+					body[k] = v
+				}
 				continue
 			}
 			if body[k] != nil {
-				continue // уже задано из content.example
+				continue
 			}
 			propMap, _ := propSchema.(map[string]interface{})
 			if ex, has := propMap["example"]; has {
@@ -228,7 +262,10 @@ func buildCurl(spec *OpenAPI, path, method string, op *Operation, vars map[strin
 			if len(body) > 0 {
 				raw, _ := json.Marshal(body)
 				b.WriteString(fmt.Sprintf("-H %q ", "Content-Type: application/json"))
-				b.WriteString(fmt.Sprintf("-d %q ", string(raw)))
+
+				jsonBody := string(raw)
+				jsonBody = strings.ReplaceAll(jsonBody, "'", "'\\''")
+				b.WriteString(fmt.Sprintf("-d '%s' ", jsonBody))
 			}
 		}
 	}

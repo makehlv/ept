@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"os/exec"
 	"sort"
 	"strings"
 
@@ -28,6 +29,18 @@ func main() {
 	command := os.Args[1]
 	switch command {
 	case "swg":
+		if len(os.Args) >= 3 && os.Args[2] == "--path" {
+			fmt.Println(svc.Swagger.SwaggersFilePath())
+			break
+		}
+		if len(os.Args) >= 3 && os.Args[2] == "--open" {
+			path := svc.Swagger.SwaggersFilePath()
+			if err := exec.Command("open", path).Run(); err != nil {
+				logger.Error("swg --open failed", "error", err)
+				os.Exit(1)
+			}
+			break
+		}
 		if len(os.Args) < 3 {
 			names, err := svc.Swagger.ListServers()
 			if err != nil {
@@ -40,6 +53,18 @@ func main() {
 			break
 		}
 		serverName := os.Args[2]
+		if len(os.Args) >= 4 && os.Args[3] == "--path" {
+			fmt.Println(svc.Swagger.ServerRequestsDir(serverName))
+			break
+		}
+		if len(os.Args) >= 4 && os.Args[3] == "--open" {
+			dir := svc.Swagger.ServerRequestsDir(serverName)
+			if err := exec.Command("open", dir).Run(); err != nil {
+				logger.Error("swg --open failed", "error", err)
+				os.Exit(1)
+			}
+			break
+		}
 		genOp := parseFlag(os.Args[3:], "--gen")
 		specPath := parseFlag(os.Args[3:], "--spec")
 		if genOp != "" && specPath != "" {
@@ -59,10 +84,22 @@ func main() {
 				os.Exit(1)
 			}
 		} else {
-			fmt.Println("usage: kk swg [<server_name> --gen <operationId> | --spec <absolute_path_to_swagger>]")
+			fmt.Println("usage: ept swg [<server_name> --gen <operationId> | --spec <absolute_path_to_swagger>]")
 			os.Exit(1)
 		}
 	case "var":
+		if len(os.Args) >= 3 && os.Args[2] == "--path" {
+			fmt.Println(svc.Variable.VarFilePath())
+			break
+		}
+		if len(os.Args) >= 3 && os.Args[2] == "--open" {
+			path := svc.Variable.VarFilePath()
+			if err := exec.Command("open", path).Run(); err != nil {
+				logger.Error("var --open failed", "error", err)
+				os.Exit(1)
+			}
+			break
+		}
 		if len(os.Args) < 3 {
 			vars, err := svc.Variable.ListVars()
 			if err != nil {
@@ -80,7 +117,7 @@ func main() {
 			break
 		}
 		if len(os.Args) < 4 {
-			fmt.Println("usage: kk var [<key> <value>]")
+			fmt.Println("usage: ept var [<key> <value>]")
 			os.Exit(1)
 		}
 		key := os.Args[2]

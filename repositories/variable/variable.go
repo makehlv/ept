@@ -20,6 +20,10 @@ func (r *VariableRepository) varsPath() string {
 	return p
 }
 
+func (r *VariableRepository) VarsPath() string {
+	return r.varsPath()
+}
+
 func (r *VariableRepository) GetVars() (map[string]string, error) {
 	path := r.varsPath()
 	data, err := os.ReadFile(path)
