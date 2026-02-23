@@ -37,7 +37,7 @@ func (r *HttpRequestRepository) SaveCurlIfNotExists(serverName, operationId, cur
 		return "", fmt.Errorf("create dir %q: %w", dir, err)
 	}
 
-	path := filepath.Join(dir, operationId+".txt")
+	path := filepath.Join(dir, operationId+".http")
 
 	if existing, err := os.ReadFile(path); err == nil {
 		ts := time.Now().Format("2006.01.02T15:04")
