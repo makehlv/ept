@@ -7,3 +7,7 @@ func (s *VariableService) Add(key, value string) error {
 func (s *VariableService) ListVars() (map[string]string, error) {
 	return s.repositories.Variable.GetVars()
 }
+
+func (s *VariableService) VarFilePath() string {
+	return s.repositories.Variable.VarsPath()
+}

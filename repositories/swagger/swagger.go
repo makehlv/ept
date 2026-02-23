@@ -97,3 +97,7 @@ func (r *SwaggerRepository) swaggersPath() string {
 	}
 	return p
 }
+
+func (r *SwaggerRepository) SwaggersPath() string {
+	return r.swaggersPath()
+}

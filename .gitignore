@@ -40,3 +40,6 @@ vars.txt
 # swaggers file
 swagger.yaml
 swaggers.txt
+
+# generated files
+generated/
